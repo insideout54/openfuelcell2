@@ -146,11 +146,13 @@ void Foam::combustionModels::electroChemicalReaction<ReactionThermo>::correct()
     const scalarField& xH2O = phase.X(water);
 
     //- Activity
-    scalarField act0 =
+    scalarField act0
+    (
         xH2O
       * this->thermo_.p()
       / saturation_->pSat(thermo_.T()).ref()
-      + 2.*(scalar(1) - phase.primitiveField());
+      + 2.*(scalar(1) - phase.primitiveField())
+    );
 
     //- Only consider catalyst zone
     label znId = fluidPhase.cellZones().findZoneID(eta_->zoneName());

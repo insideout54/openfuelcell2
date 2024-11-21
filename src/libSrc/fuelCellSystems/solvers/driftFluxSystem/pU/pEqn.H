@@ -154,8 +154,8 @@ while (pimple.correct())
     // Add additional mass 
     // Mass transfer between regions
     {
-        volScalarField dmdt1 = phase1_.dmdt();
-        volScalarField dmdt2 = phase2_.dmdt();
+        volScalarField dmdt1(phase1_.dmdt());
+        volScalarField dmdt2(phase2_.dmdt());
 
         if (pEqnComp1.valid())
         {
