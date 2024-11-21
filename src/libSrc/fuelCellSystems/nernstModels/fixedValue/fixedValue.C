@@ -63,7 +63,7 @@ void Foam::nernstModels::fixedValue<Thermo, OtherThermo>::correct()
     const scalarField& p = this->thermo_.p();
     const scalarField& T = this->thermo_.T();
 
-    scalarField pRef = p/this->pRef().value();
+    scalarField pRef(p/this->pRef().value());
 
     forAllConstIter(HashTable<scalar>, this->rxnList(), iter)
     {

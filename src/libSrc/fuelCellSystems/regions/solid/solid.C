@@ -132,7 +132,7 @@ void Foam::regionTypes::solid::mapToCell
     //- rhoCpCell
     volScalarField& rhoCpCell = fuelCell.rhoCp();
 
-    scalarField rhoCp = rho*cp;
+    scalarField rhoCp(rho*cp);
 
     // Perform reverse mapping
     rhoCpCell.rmap(rhoCp, cellMapIO_);

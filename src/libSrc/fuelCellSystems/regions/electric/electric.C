@@ -203,7 +203,7 @@ void Foam::regionTypes::electric::solve()
         //- Electro-Neutral, the total electron+proton flux should be zero
         const scalarField& source = j_;
         const scalarField& volume = this->V();
-        scalarField sum = source*volume;
+        scalarField sum(source*volume);
         scalar iDot(Foam::gSum(sum)/Foam::gSum(volume));
 
         for (label id = 0; id < nCells(); id++)
@@ -310,7 +310,7 @@ void Foam::regionTypes::electric::mapToCell
     Info << "Map " << name() << " to Cell " << nl << endl;
 
     //- heat source
-    volScalarField heatSource = (i_ & i_)/sigmaField_;
+    volScalarField heatSource((i_ & i_)/sigmaField_);
     volScalarField heatSource0
     (
         IOobject

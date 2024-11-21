@@ -78,26 +78,26 @@ NonRandomTwoLiquid
     (
         "alpha12",
         dimless,
-        dict.subDict(species1Name_).get<scalar>("alpha")
+        dict.subDict(species1Name_).template get<scalar>("alpha")
     );
     alpha21_ = dimensionedScalar
     (
         "alpha21",
         dimless,
-        dict.subDict(species2Name_).get<scalar>("alpha")
+        dict.subDict(species2Name_).template get<scalar>("alpha")
     );
 
     beta12_ = dimensionedScalar
     (
         "beta12",
         dimless/dimTemperature,
-        dict.subDict(species1Name_).get<scalar>("beta")
+        dict.subDict(species1Name_).template get<scalar>("beta")
     );
     beta21_ = dimensionedScalar
     (
         "beta21",
         dimless/dimTemperature,
-        dict.subDict(species2Name_).get<scalar>("beta")
+        dict.subDict(species2Name_).template get<scalar>("beta")
     );
 
     saturationModel12_.reset

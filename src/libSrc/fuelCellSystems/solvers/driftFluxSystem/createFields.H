@@ -24,8 +24,8 @@ const volScalarField& psi1 = thermo1.psi();
 volScalarField& rho2 = thermo2.rho();
 const volScalarField& psi2 = thermo2.psi();
 
-volScalarField dmdt1 = phase1_.dmdt();
-volScalarField dmdt2 = phase2_.dmdt();
+volScalarField dmdt1(phase1_.dmdt());
+volScalarField dmdt2(phase2_.dmdt());
 
 fv::options& fvOptions = this->fvOptions();
 

@@ -426,15 +426,19 @@ Foam::TwoResistanceHeatTransferPhaseSystem<BasePhaseSystem>::heatTransfer
 
             if (phase1.name() == continuous)
             {
-                volScalarField dmdthe =
-                    dmdt21*phase1.thermo().he(phase1.thermo().p(), Tf);
+                volScalarField dmdthe
+                (
+                    dmdt21*phase1.thermo().he(phase1.thermo().p(), Tf)
+                );
 
                 dmdthe0.rmap(dmdthe, cellMap);
             }
             else
             {
-                volScalarField dmdthe =
-                    dmdt12*phase2.thermo().he(phase2.thermo().p(), Tf);
+                volScalarField dmdthe
+                (
+                    dmdt12*phase2.thermo().he(phase2.thermo().p(), Tf)
+                );
 
                 dmdthe0.rmap(dmdthe, cellMap);
             }
@@ -443,13 +447,13 @@ Foam::TwoResistanceHeatTransferPhaseSystem<BasePhaseSystem>::heatTransfer
         {
             if (phase1.name() == continuous)
             {
-                volScalarField dmdthe = dmdt21*he2;
+                volScalarField dmdthe(dmdt21*he2);
 
                 dmdthe0.rmap(dmdthe, cellMap);
             }
             else
             {
-                volScalarField dmdthe = dmdt12*he1;
+                volScalarField dmdthe(dmdt12*he1);
 
                 dmdthe0.rmap(dmdthe, cellMap);
             }
@@ -458,8 +462,8 @@ Foam::TwoResistanceHeatTransferPhaseSystem<BasePhaseSystem>::heatTransfer
 
         if (phase1.name() == continuous)
         {
-            volScalarField dmdtCp = dmdt21*phase1.thermo().Cp().ref();
-            volScalarField dmdtKK = dmdt21*(K2 - K1);
+            volScalarField dmdtCp(dmdt21*phase1.thermo().Cp().ref());
+            volScalarField dmdtKK(dmdt21*(K2 - K1));
 
             dmdtCp0.rmap(dmdtCp, cellMap);
             dmdtKK0.rmap(dmdtKK, cellMap);
@@ -468,8 +472,8 @@ Foam::TwoResistanceHeatTransferPhaseSystem<BasePhaseSystem>::heatTransfer
         }
         else
         {
-            volScalarField dmdtCp = dmdt12*phase2.thermo().Cp().ref();
-            volScalarField dmdtKK = dmdt12*(K1 - K2);
+            volScalarField dmdtCp(dmdt12*phase2.thermo().Cp().ref());
+            volScalarField dmdtKK(dmdt12*(K1 - K2));
 
             dmdtCp0.rmap(dmdtCp, cellMap);
             dmdtKK0.rmap(dmdtKK, cellMap);

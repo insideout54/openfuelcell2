@@ -125,7 +125,7 @@ void Foam::dissolvedModels::standardDWModel::solve()
 {
     const volVectorField& i = mesh().lookupObject<volVectorField>(iName_);
 
-    surfaceScalarField phiI = fvc::interpolate(i) & mesh().Sf();
+    surfaceScalarField phiI(fvc::interpolate(i) & mesh().Sf());
 
     tmp<fvScalarMatrix> wEqn
     (
@@ -142,7 +142,7 @@ void Foam::dissolvedModels::standardDWModel::solve()
 
         // Update the water content
         // Water intake = water uptake
-        scalarField sum = source*volume;
+        scalarField sum(source*volume);
         scalar iDot(Foam::gSum(sum)/Foam::gSum(volume));
 
         for (label i = 0; i < lambda_.size(); i++)
@@ -164,7 +164,7 @@ void Foam::dissolvedModels::standardDWModel::correct()
 
     const scalarField& T = mesh().lookupObject<volScalarField>(TName_);
 
-    scalarField Dwm0 = Foam::exp(-2436/T)*corr_;
+    scalarField Dwm0(Foam::exp(-2436/T)*corr_);
 
     forAll(Dwm_, cellI)
     {

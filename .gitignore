@@ -2,6 +2,7 @@
 *.dep
 .vscode
 linux*/
+darwin*/
 lnInclude/
 backup/
 *~

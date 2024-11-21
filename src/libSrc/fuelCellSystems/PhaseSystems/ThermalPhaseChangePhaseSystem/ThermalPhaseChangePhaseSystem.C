@@ -310,7 +310,7 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::heatTransfer
 
             if (phase1.name() == continuous)
             {
-                const volScalarField wMDotL0 = negPart(*this->wMDotL_[pair]);
+                const volScalarField wMDotL0(negPart(*this->wMDotL_[pair]));
 
                 wMDotL.rmap(wMDotL0, cellMap);
 
@@ -318,7 +318,7 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::heatTransfer
             }
             else
             {
-                const volScalarField wMDotL0 = posPart(*this->wMDotL_[pair]);
+                const volScalarField wMDotL0(posPart(*this->wMDotL_[pair]));
 
                 wMDotL.rmap(wMDotL0, cellMap);
 

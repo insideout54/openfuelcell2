@@ -302,9 +302,9 @@ heatTransfer
 
         if (phase1.name() == continuous)
         {
-            volScalarField dmdtCp = dmdt21*phase1.thermo().Cp().ref();
-            volScalarField dmdtKK = dmdt21*(K2 - K1);
-            volScalarField dmdthe = dmdt21*he2;
+            volScalarField dmdtCp(dmdt21*phase1.thermo().Cp().ref());
+            volScalarField dmdtKK(dmdt21*(K2 - K1));
+            volScalarField dmdthe(dmdt21*he2);
 
             dmdthe0.rmap(dmdthe, cellMap);
             dmdtCp0.rmap(dmdtCp, cellMap);
@@ -314,9 +314,9 @@ heatTransfer
         }
         else
         {
-            volScalarField dmdtCp = dmdt12*phase2.thermo().Cp().ref();
-            volScalarField dmdtKK = dmdt12*(K1 - K2);
-            volScalarField dmdthe = dmdt12*he1;
+            volScalarField dmdtCp(dmdt12*phase2.thermo().Cp().ref());
+            volScalarField dmdtKK(dmdt12*(K1 - K2));
+            volScalarField dmdthe(dmdt12*he1);
 
             dmdthe0.rmap(dmdthe, cellMap);
             dmdtCp0.rmap(dmdtCp, cellMap);

@@ -16,7 +16,7 @@ rhoThermo& thermo = phase_.thermoRef();
 volScalarField& p = thermo.p();
 volScalarField& rho = thermo.rho();
 const volScalarField& psi = thermo.psi();
-volScalarField dmdt = phase_.dmdt();
+volScalarField dmdt(phase_.dmdt());
 
 dimensionedScalar pMin
 (

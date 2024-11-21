@@ -394,7 +394,7 @@ void Foam::porousZones::DarcyForchheimer::correctU
     const volScalarField& alpha2 = mesh_.lookupObject<volScalarField>(alpha2Name);
 
     //- temperary velocities
-    volVectorField U10 = dpcds & fvc::grad(alpha1);
+    volVectorField U10(dpcds & fvc::grad(alpha1));
 
     forAll(cellZoneIDs_, zoneI)
     {
