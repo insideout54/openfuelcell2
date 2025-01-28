@@ -20,7 +20,6 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-
 \*---------------------------------------------------------------------------*/
 
 #include "ButlerVolmer.H"
@@ -44,19 +43,22 @@ template<class Thermo>
 Foam::activationOverpotentialModels::ButlerVolmer<Thermo>::~ButlerVolmer()
 {}
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * //
 template<class Thermo>
 void Foam::activationOverpotentialModels::ButlerVolmer<Thermo>::correct()
 {
-    //- Create Nernst model
-    this->createNernst();
+    // Catalyst properties (hardcoded)
+    const scalar mPt = 0.5;    // Pt loading [mg/cm^2], convert if necessary
+    const scalar As = 60.0;    // Specific surface area [m^2/mg]
 
-    //- Correct
+    // Compute specific active area Av
+    const scalar Av = mPt * As;
+
+    // Create Nernst model
+    this->createNernst();
     this->nernst_->correct();
 
-    //- Get sub regions
-    //- Refer to regionType
-    //- Including: fluid, electron (BPP + GDL + CL), ion (CLs + membrane)
+    // Access relevant regions
     const regionType& fluidPhase = this->region
     (
         word(this->regions_.subDict("fluid").lookup("name"))
@@ -70,8 +72,7 @@ void Foam::activationOverpotentialModels::ButlerVolmer<Thermo>::correct()
         word(this->regions_.subDict("ion").lookup("name"))
     );
 
-    //- Source/sink terms for electron and ion fields
-    //- See names in regions/electronIon/electronIon.C
+    // Source/sink fields
     scalarField& SE = const_cast<volScalarField&>
     (
         electronPhase.template lookupObject<volScalarField>("J")
@@ -81,98 +82,87 @@ void Foam::activationOverpotentialModels::ButlerVolmer<Thermo>::correct()
         ionPhase.template lookupObject<volScalarField>("J")
     );
 
-    //- Potential fields
+    // Potential fields
     const scalarField& phiE = electronPhase.template
-        lookupObject<volScalarField>
-        (
-            word(this->phiNames_["electron"])
-        );
+        lookupObject<volScalarField>(word(this->phiNames_["electron"]));
     const scalarField& phiI = ionPhase.template
-        lookupObject<volScalarField>
-        (
-            word(this->phiNames_["ion"])
-        );
+        lookupObject<volScalarField>(word(this->phiNames_["ion"]));
 
-    //- Reference
+    // Overpotential fields
     scalarField& eta = this->eta_;
-    //- Nernst field
     scalarField& nernst = this->nernst_()();
-    //- Current density
     scalarField& j = this->j_;
 
-    //- Access temperature and reactant
+    // Local T, species, etc.
     const scalarField& T = this->thermo_.T();
     const scalarField& s = this->phase_;
 
-    //- Mixture mole fraction
-    const scalarField W(this->thermo_.W()/1000.0);
-    //- Mixture density
-    const scalarField& rho= this->phase_.thermo().rho();
-    //- Store values for all species
+    // Mixture mole fraction and density
+    const scalarField W(this->thermo_.W() / 1000.0);
+    const scalarField& rho = this->phase_.thermo().rho();
 
     scalarField coeff(this->phase_.mesh().nCells(), 1.0);
-    //- Loop for all relative species
     forAllConstIter(dictionary, this->species_, iter)
     {
         if (iter().isDict())
         {
             const word& name = iter().keyword();
-            const dictionary& dict0 = iter().dict();
+            const dictionary& d0 = iter().dict();
 
-            scalar ksi = readScalar(dict0.lookup("ksi"));
-            scalar cRef = readScalar(dict0.lookup("cRef"));
+            scalar ksi = readScalar(d0.lookup("ksi"));
+            scalar cRef = readScalar(d0.lookup("cRef"));
 
             const scalarField& X = this->phase_.X(name);
 
-            coeff *= Foam::pow(X*rho/W/cRef, ksi);
+            coeff *= Foam::pow(X * rho / W / cRef, ksi);
         }
     }
 
-    //- Only consider catalyst zone
+    // Catalyst zone information
     label znId = fluidPhase.cellZones().findZoneID(this->zoneName_);
     const labelList& cells = fluidPhase.cellZones()[znId];
 
-    //- electron transfer
-    //- cathode side, < 0
-    //- anode side, >0
-    scalar n = this->nernst_->rxnList()["e"];
-    scalar sign = n/mag(n);
+    // Electron transfer sign
+    scalar ePerMol = this->nernst_->rxnList()["e"];
+    scalar sign = ePerMol / mag(ePerMol);
 
-    //- The total current: volume averaged
+    // Accumulate total current
     scalar Rj(0.0);
 
     forAll(cells, cellI)
     {
-        //- get cell IDs
         label fluidId = cells[cellI];
         label electronId = electronPhase.cellMap()[fluidPhase.cellMapIO()[fluidId]];
         label ionId = ionPhase.cellMap()[fluidPhase.cellMapIO()[fluidId]];
 
-        //- activation overpotential
+        // Overpotential relaxation
         eta[fluidId] = 
         (
-            eta[fluidId]*(scalar(1) - this->relax_)
-          + (phiE[electronId] - phiI[ionId] - nernst[fluidId])
-          * this->relax_
+            eta[fluidId] * (scalar(1) - this->relax_)
+          + (phiE[electronId] - phiI[ionId] - nernst[fluidId]) * this->relax_
         );
 
-        //- Buttler-volmer relation
-        j[fluidId] = Foam::max
-        (
-            this->j0_.value()*
-            coeff[fluidId]*
-            Foam::pow(s[fluidId], this->gamma_)*
-            (
-                Foam::exp(n*this->alpha_*F*eta[fluidId]/Rgas/T[fluidId])
-              - Foam::exp(-n*(scalar(1) - this->alpha_)*F*eta[fluidId]/Rgas/T[fluidId])
-            )
-            ,
-            scalar(0)
-        );
+        // Clamping the exponents for stability
+        scalar localEtaAn = ePerMol * this->alpha_ * F * eta[fluidId] / (Rgas * T[fluidId]);
+        scalar localEtaCat = -ePerMol * (scalar(1) - this->alpha_) * F * eta[fluidId] / (Rgas * T[fluidId]);
 
-        //- anode side: SE = Rj, SI = -Rj
-        //- cathode side: SE = -Rj, SI = Rj
-        SE[electronId] = -sign*j[fluidId];
+        localEtaAn = Foam::clamp(localEtaAn, -25.0, 25.0);
+        localEtaCat = Foam::clamp(localEtaCat, -25.0, 25.0);
+
+        // Reactant concentration clamp
+        scalar sLocal = Foam::max(s[fluidId], VSMALL);
+
+        // Compute current density using Butler–Volmer with Av
+        scalar expAn = Foam::exp(localEtaAn);
+        scalar expCat = Foam::exp(localEtaCat);
+
+        scalar jLocal = Av * this->j0_.value() * coeff[fluidId] * Foam::pow(sLocal, this->gamma_)
+                       * (expAn - expCat);
+
+        j[fluidId] = Foam::max(jLocal, scalar(0));
+
+        // Source/sink for electron & ion phases
+        SE[electronId] = -sign * j[fluidId];
         SI[ionId] = -SE[electronId];
 
         Rj += fluidPhase.V()[fluidId] * j[fluidId];
@@ -180,8 +170,7 @@ void Foam::activationOverpotentialModels::ButlerVolmer<Thermo>::correct()
 
     reduce(Rj, sumOp<scalar>());
 
-    Info << "Total current (A) at " << this->zoneName_
-         << ": " << Rj << endl;
+    Info << "Total current (A) at " << this->zoneName_ << ": " << Rj << endl;
 }
 
 // ************************************************************************* //
