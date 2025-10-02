@@ -2,7 +2,7 @@
 cd ${0%/*} || exit 1    # Run from this directory
 
 # Parse arguments for library compilation
-. $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
+usr/lib/openfoam/openfoam2306/wmake/scripts/AllwmakeParseArguments
 
 libSrc/Allwmake $targetType $*
 ( cd appSrc && wmake )
